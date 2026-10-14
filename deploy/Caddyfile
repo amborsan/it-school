@@ -1,0 +1,10 @@
+# Replace api.example.com with the real hostname pointing to this server.
+# Caddy obtains and renews certificates and redirects HTTP to HTTPS.
+api.example.com {
+    reverse_proxy 127.0.0.1:3000 {
+        # Overwrite forwarded headers; clients must not choose their own IP/protocol.
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-Host {host}
+    }
+}

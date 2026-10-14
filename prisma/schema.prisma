@@ -1,0 +1,346 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==========================================
+// CORE USER TABLE
+// ==========================================
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  fullName     String?
+  firstName    String?
+  lastName     String?
+  role         UserRole  @default(STUDENT)
+  phone        String?
+  address      String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  student  Student?
+  teacher  Teacher?
+  employee Employee?
+  payments Payment[]
+  sessions Session[]
+
+  @@map("users")
+}
+
+// ==========================================
+// STUDENT TABLE
+// ==========================================
+model Student {
+  id             String    @id @default(uuid())
+  userId         String    @unique
+  user           User      @relation(fields: [userId], references: [id])
+  studentId      String?   @unique // e.g., "STU-2024-001"
+  dateOfBirth    DateTime?
+  enrollmentDate DateTime  @default(now())
+
+  enrollments Enrollment[]
+  submissions Submission[]
+  reviews     Review[]
+
+  @@map("students")
+}
+
+// ==========================================
+// TEACHER TABLE
+// ==========================================
+model Teacher {
+  id         String    @id @default(uuid())
+  userId     String    @unique
+  user       User      @relation(fields: [userId], references: [id])
+  employeeId String?   @unique // e.g., "EMP-2024-001"
+  department String?
+  position   String?
+  hireDate   DateTime?
+
+  courses Course[] @relation("CourseTeacher")
+
+  @@map("teachers")
+}
+
+// ==========================================
+// COURSE TABLE
+// ==========================================
+model Course {
+  id           String  @id @default(uuid())
+  code         String  @unique // e.g., "CS101", "AI-ML-202"
+  title        String
+  description  String?
+  instructorId String?
+
+  instructor    Teacher?         @relation("CourseTeacher", fields: [instructorId], references: [id])
+  enrollments   Enrollment[]
+  assignments   Assignment[]
+  grades        Grade[]
+  materials     CourseMaterial[]
+  reviews       Review[]
+  credits       Int              @default(3)
+  level         CourseLevel      @default(BASIC)
+  prerequisites String[] // Related course codes
+  maxStudents   Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("courses")
+}
+
+// ==========================================
+// EMPLOYEE TABLE
+// ==========================================
+model Employee {
+  id         String    @id @default(uuid())
+  userId     String    @unique
+  user       User      @relation(fields: [userId], references: [id])
+  employeeId String    @unique // e.g., "EMP-2024-001"
+  department String
+  position   String
+  hireDate   DateTime?
+  salary     Decimal?
+  isActive   Boolean   @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("employees")
+}
+
+// ==========================================
+// ENROLLMENT TABLE (Linking Students to Courses)
+// ==========================================
+model Enrollment {
+  id         String           @id @default(uuid())
+  studentId  String
+  courseId   String
+  status     EnrollmentStatus @default(PENDING)
+  enrolledAt DateTime         @default(now())
+
+  student Student  @relation(fields: [studentId], references: [id])
+  course  Course   @relation(fields: [courseId], references: [id])
+  grades  Grade[]
+  payment Payment?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([courseId])
+  @@map("enrollments")
+}
+
+// ==========================================
+// ASSIGNMENT TABLE (Coursework)
+// ==========================================
+model Assignment {
+  id          String    @id @default(uuid())
+  courseId    String
+  title       String
+  description String?
+  dueDate     DateTime?
+  maxPoints   Int
+  fileUrl     String?
+
+  course      Course       @relation(fields: [courseId], references: [id])
+  submissions Submission[]
+
+  createdAt DateTime @default(now())
+
+  @@map("assignments")
+}
+
+// ==========================================
+// SUBMISSION TABLE (Student Assignments)
+// ==========================================
+model Submission {
+  id           String   @id @default(uuid())
+  assignmentId String
+  studentId    String
+  content      String? // uploaded file path or text
+  points       Int? // score received
+  submittedAt  DateTime @default(now())
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id])
+  student    Student    @relation(fields: [studentId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@map("submissions")
+}
+
+// ==========================================
+// GRADE TABLE (Comprehensive grading)
+// ==========================================
+model Grade {
+  id           String @id @default(uuid())
+  enrollmentId String
+  courseId     String
+  category     String // e.g., "Homework", "Quiz", "Final"
+
+  course     Course     @relation(fields: [courseId], references: [id])
+  enrollment Enrollment @relation(fields: [enrollmentId], references: [id])
+
+  pointsObtained Int?
+  totalPoints    Int
+
+  createdAt DateTime @default(now())
+
+  @@map("grades")
+}
+
+// ==========================================
+// COURSE MATERIAL TABLE (Resources)
+// ==========================================
+model CourseMaterial {
+  id           String       @id @default(uuid())
+  courseId     String
+  title        String
+  description  String?
+  fileUrl      String?
+  materialType MaterialType @default(VIDEO)
+
+  course Course @relation(fields: [courseId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@map("course_materials")
+}
+
+// ==========================================
+// PAYMENT TABLE
+// ==========================================
+model Payment {
+  id       String        @id @default(uuid())
+  userId   String
+  amount   Decimal
+  currency String        @default("USD")
+  status   PaymentStatus @default(PENDING)
+  method   String? // e.g., "credit_card", "bank_transfer"
+
+  user         User        @relation(fields: [userId], references: [id])
+  enrollmentId String?     @unique // links to a specific course enrollment
+  enrollment   Enrollment? @relation(fields: [enrollmentId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([status])
+  @@map("payments")
+}
+
+// ==========================================
+// EVENT TABLE (School events, webinars)
+// ==========================================
+model Event {
+  id           String   @id @default(uuid())
+  title        String
+  description  String?
+  eventDate    DateTime
+  maxAttendees Int?
+  location     String? // Zoom link, physical room, etc.
+
+  createdAt DateTime @default(now())
+
+  @@map("events")
+}
+
+// ==========================================
+// REVIEW TABLE (Student feedback on courses)
+// ==========================================
+model Review {
+  id         String   @id @default(uuid())
+  studentId  String
+  courseId   String
+  rating     Int // 1-5 stars
+  comment    String?
+  reviewedAt DateTime @default(now())
+
+  student Student @relation(fields: [studentId], references: [id])
+  course  Course  @relation(fields: [courseId], references: [id])
+
+  @@map("reviews")
+}
+
+// ==========================================
+// AUDIT LOG TABLE (Track changes)
+// ==========================================
+model AuditLog {
+  id          String  @id @default(uuid())
+  entityType  String // e.g., "User", "Course"
+  entityId    String
+  action      String // CREATE, UPDATE, DELETE
+  userId      String?
+  description String?
+
+  createdAt DateTime @default(now())
+
+  @@map("audit_logs")
+}
+
+// ==========================================
+// ENUMS
+// ==========================================
+enum UserRole {
+  STUDENT
+  TEACHER
+  ADMIN
+  EMPLOYEE
+}
+
+enum CourseLevel {
+  BASIC
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum EnrollmentStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  DROPPED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum MaterialType {
+  VIDEO
+  PDF
+  LIVE_Lecture
+  DOCUMENT
+  QUIZ
+  CODE_REPOSITORY
+}
+
+// ==========================================
+// INDEXES FOR PERFORMANCE
+// ==========================================
+
+// Opaque browser sessions. Never persist the raw cookie credential.
+model Session {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}

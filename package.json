@@ -1,0 +1,45 @@
+{
+  "name": "school-api-project",
+  "author": {
+    "name": "Ali Borsan",
+    "School": "DCI",
+    "teacher": "Aretas"
+  },
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A beginner-friendly Express 5 and Prisma PostgreSQL API",
+  "engines": {
+    "node": ">=24.11.0"
+  },
+  "scripts": {
+    "dev": "node --watch src/main.js",
+    "start": "node src/main.js",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "db:validate": "prisma validate",
+    "db:seed": "prisma db seed --config prisma7.config.ts",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
+    "test:integration": "node --env-file-if-exists=.env --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --config jest.supabase.config.js",
+    "db:deploy": "prisma migrate deploy --config prisma7.config.ts",
+    "admin:bootstrap": "node scripts/bootstrap-admin.js",
+    "sessions:cleanup": "node scripts/cleanup-sessions.js"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "7.10.0",
+    "cookie": "2.0.1",
+    "cors": "2.8.6",
+    "dotenv": "17.4.2",
+    "express": "5.2.1",
+    "express-rate-limit": "8.7.1",
+    "helmet": "8.3.0",
+    "pg": "8.23.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "jest": "^30.5.2",
+    "prisma": "7.10.0"
+  }
+}
