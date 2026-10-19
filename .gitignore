@@ -51,3 +51,6 @@ temp/
 *.tmp
 
 # Keep package-lock.json, Prisma migrations, and documentation in Git.
+
+# Local Superpowers planning documents
+/docs/superpowers/
