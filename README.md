@@ -70,10 +70,12 @@ Logout returns 204, deletes the session, and clears cookies. Replaying the old s
 
 ## Documentation
 
+- [Postman testing guide](POSTMAN-TESTING.md): copyable requests for all CRUD operations, relationships, permissions, and cleanup.
 - [API reference](docs/api.md): all resources, auth endpoints, request/response examples, writable fields, errors and pagination.
 - [Security and HTTPS deployment](docs/security.md): cookies, CSRF, password storage, permissions, CORS, rate limits, proxy configuration, audit limitations.
 - [Project plan](docs/project-plan.md) and [implementation checklist](docs/superpowers/plans/2026-10-14-account-api.md).
-- [Data-model diagram](docs/data-model.md) and [Prisma schema](prisma/schema.prisma).
+- [Requirements review and remaining work](docs/superpowers/plans/2026-10-19-project-completion.md): current evidence and the plan for completing the module requirements.
+- [Database tables and relationship diagrams](docs/data-model.md), [project structure and request flow](docs/project-structure.md), and [Prisma schema](prisma/schema.prisma).
 - [Module requirements](30Sep-module-projekt-en.md).
 
 ## Tests
